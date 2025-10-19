@@ -1,0 +1,59 @@
+architecture: replication
+
+auth:
+  enabled: true
+  password: "agora-valkey-password-2024"
+
+master:
+  count: 1
+  nodeSelector:
+    workload: database
+  tolerations:
+    - key: "workload"
+      operator: "Equal"
+      value: "database"
+      effect: "NoSchedule"
+  
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1"
+    limits:
+      memory: "4Gi"
+      cpu: "2"
+  
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: "local-path"
+
+replica:
+  replicaCount: 2
+  nodeSelector:
+    workload: database
+  tolerations:
+    - key: "workload"
+      operator: "Equal"
+      value: "database"
+      effect: "NoSchedule"
+  
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1"
+  
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: "local-path"
+
+sentinel:
+  enabled: true
+  quorum: 2
+
+metrics:
+  enabled: true
+

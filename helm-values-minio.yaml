@@ -1,0 +1,91 @@
+global:
+  security:
+    allowInsecureImages: true
+
+mode: distributed
+
+image:
+  registry: docker.io
+  repository: minio/minio
+  tag: RELEASE.2024-10-13T13-34-11Z
+
+rootUser: minioadmin
+rootPassword: "agora-minio-password-2024"
+
+replicas: 4
+
+nodeSelector:
+  workload: storage
+
+tolerations:
+  - key: "workload"
+    operator: "Equal"
+    value: "storage"
+    effect: "NoSchedule"
+
+resources:
+  requests:
+    memory: "4Gi"
+    cpu: "2"
+  limits:
+    memory: "8Gi"
+    cpu: "4"
+
+persistence:
+  enabled: true
+  size: 300Gi  # Per node, total 1.2TB across 4 nodes
+  storageClass: "local-path"
+
+service:
+  type: ClusterIP
+  port: 9000
+
+consoleService:
+  type: ClusterIP
+  port: 9001
+
+ingress:
+  enabled: false
+
+# Buckets to create automatically
+buckets:
+  - name: agora-user-uploads
+    policy: none
+    purge: false
+  - name: agora-agent-artifacts
+    policy: none
+    purge: false
+  - name: agora-voice-recordings
+    policy: none
+    purge: false
+  - name: agora-screen-recordings
+    policy: none
+    purge: false
+  - name: agora-exports
+    policy: none
+    purge: false
+
+# Lifecycle policies
+policies:
+  - name: agora-lifecycle
+    statements:
+      - resources:
+          - "arn:aws:s3:::agora-voice-recordings/*"
+        actions:
+          - "s3:DeleteObject"
+        effect: "Allow"
+        conditions:
+          - key: "s3:ExistingObjectTag/retention"
+            value: "30days"
+
+metrics:
+  serviceMonitor:
+    enabled: false
+
+# Enable versioning for important buckets
+defaultBuckets: []
+
+environment:
+  MINIO_BROWSER: "on"
+  MINIO_PROMETHEUS_AUTH_TYPE: "public"
+

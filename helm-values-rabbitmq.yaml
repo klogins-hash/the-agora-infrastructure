@@ -1,0 +1,65 @@
+image:
+  registry: docker.io
+  repository: rabbitmq
+  tag: 3.13-management
+
+auth:
+  username: agora
+  password: "agora-rabbitmq-password-2024"
+  erlangCookie: "agora-erlang-cookie-2024-secret"
+
+replicaCount: 3
+
+nodeSelector:
+  workload: database
+
+tolerations:
+  - key: "workload"
+    operator: "Equal"
+    value: "database"
+    effect: "NoSchedule"
+
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1"
+  limits:
+    memory: "4Gi"
+    cpu: "2"
+
+persistence:
+  enabled: true
+  size: 20Gi
+  storageClass: "local-path"
+
+clustering:
+  enabled: true
+  forceBoot: false
+
+loadDefinition:
+  enabled: false
+
+service:
+  type: ClusterIP
+  ports:
+    amqp: 5672
+    amqpTls: 5671
+    dist: 25672
+    manager: 15672
+    epmd: 4369
+    metrics: 9419
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+
+# Enable management plugin
+extraPlugins: "rabbitmq_management rabbitmq_prometheus"
+
+# Resource limits for queues
+memoryHighWatermark:
+  enabled: true
+  type: "relative"
+  value: 0.6
+
